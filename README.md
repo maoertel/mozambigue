@@ -217,8 +217,9 @@ cargo run --example basic_usage
 
 ## License
 
-MIT OR Apache-2.0
+Licensed under either of:
 
-## Contributing
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+at your option.

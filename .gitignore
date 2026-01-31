@@ -1,1 +1,8 @@
 /target
+
+# Cargo.lock is not needed for library crates
+Cargo.lock
+
+# Claude Code files
+CLAUDE.md
+.claude/
