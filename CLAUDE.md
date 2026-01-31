@@ -12,6 +12,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Kubernetes-specific subject extraction (service account + namespace)
 - Thread-safe JWKS caching to minimize network overhead
 
+## Git Commits
+
+**IMPORTANT:** Do NOT add co-author attribution in commit messages. Commits should only be attributed to the actual author (Mathias Oertel).
+
+❌ **Bad:**
+```
+Add new feature
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+```
+
+✅ **Good:**
+```
+Add new feature
+```
+
 ## Build and Test Commands
 
 **Before committing changes, ALWAYS run these commands:**
