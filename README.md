@@ -8,13 +8,10 @@ A Rust library for JWT (JSON Web Token) validation with JWKS (JSON Web Key Set) 
 
 - ✅ JWT signature verification using RSA and Octet keys
 - ✅ Automatic JWKS fetching from OpenID configuration endpoints (standard OIDC)
-- ✅ Configurable JWKS caching with TTL (Time-To-Live)
+- ✅ Configurable JWKS caching with TTL
 - ✅ Issuer and expiration validation
 - ✅ **Secure audience validation** - validates against configured expected audiences, not the token's own claims
 - ✅ **Kubernetes-specific claims extraction** (service account and namespace from `kubernetes.io` claim)
-- ✅ Fallback subject parsing from `sub` field in Kubernetes format: `system:serviceaccount:<namespace>:<account>`
-- ✅ Pure Rust implementation with no HTTP framework dependencies
-- ✅ Proper encapsulation - users must use safe constructors
 
 **Note:** This library currently only supports Kubernetes service account tokens. Generic OpenID Connect token support is not yet implemented.
 
@@ -165,35 +162,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 The library implements efficient JWKS caching:
 
-- JWKS are cached per issuer with a configurable TTL (default: 1 hour)
-- Cache is thread-safe using `RwLock` for concurrent reads
+- JWKS are cached with a configurable TTL (default: 1 hour)
 - Automatic cache expiration and refresh
 - Reduces network calls to the issuer's JWKS endpoint
-
-## Error Handling
-
-The library provides detailed error types for various validation failures:
-
-- `WrongIssuer`: Token issuer doesn't match the expected issuer
-- `TokenExpired`: Token has expired
-- `KeyIdMissing`: JWT header is missing the `kid` field
-- `KeyNotMatchInJwks`: Token's key ID not found in JWKS
-- `AlgorithmNotSupported`: Unsupported key algorithm (only RSA and Octet keys supported)
-- `ServiceAccountNotPresentInSubject`: Cannot extract service account from token
-- `JwksCacheError`: Error fetching or caching JWKS
-- `NoAudiencesConfigured`: No audiences configured (security error)
-
-All errors return proper `Result` types - **the library never panics**.
-
-## Design Philosophy
-
-This library is designed to be:
-
-- **Secure**: Proper audience validation, encapsulated constructors, no way to bypass safety checks
-- **Pure**: No HTTP framework dependencies (Axum, Actix, etc.). HTTP error mapping should be done in the consuming application
-- **Focused**: **Specialized exclusively for Kubernetes service account token validation**
-- **Efficient**: Built-in JWKS caching to minimize network overhead
-- **Safe**: Thread-safe caching, comprehensive error handling, never panics
 
 ## Limitations
 

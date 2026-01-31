@@ -10,9 +10,8 @@
 //! - JWT signature verification using RSA and Octet keys
 //! - Automatic JWKS fetching from OpenID configuration endpoints
 //! - Configurable JWKS caching with TTL (Time-To-Live)
-//! - Issuer and expiration validation
+//! - Issuer, audience and expiration validation
 //! - Kubernetes-specific claims extraction (service account and namespace)
-//! - Fallback subject parsing for non-Kubernetes tokens
 //!
 //! ## Example
 //!
@@ -47,7 +46,7 @@ mod error;
 mod jwks_cache;
 mod verifier;
 
-// Re-export public API
+// Re-exports for public API
 pub use claims::Subject;
 pub use config::JwtVerifierConfig;
 pub use error::Error;
