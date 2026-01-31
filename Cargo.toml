@@ -9,7 +9,7 @@ repository = "https://github.com/maoertel/mozambigue"
 documentation = "https://docs.rs/mozambigue"
 readme = "README.md"
 keywords = ["jwt", "jwks", "kubernetes", "authentication", "token"]
-categories = ["authentication", "web-programming", "cryptography"]
+categories = ["authentication", "cryptography"]
 
 [dependencies]
 async-trait = "0.1"

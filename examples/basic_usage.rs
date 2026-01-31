@@ -1,4 +1,6 @@
-use mozambigue::{JwtVerifier, JwtVerifierConfig, VerifyJwt};
+use mozambigue::JwtVerifier;
+use mozambigue::JwtVerifierConfig;
+use mozambigue::VerifyJwt;
 use std::time::Duration;
 
 #[tokio::main]

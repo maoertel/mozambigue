@@ -7,13 +7,18 @@ use crate::error::Result;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Claims {
-    pub(crate) iss: String, // Issuer
-    pub(crate) sub: String, // Subject (Service Account identity)
+    // Issuer
+    pub(crate) iss: String,
+    // Subject (Service Account identity)
+    pub(crate) sub: String,
     #[allow(dead_code)]
-    pub(crate) aud: Vec<String>, // Audiences (parsed but validated against config)
-    pub(crate) exp: i64,    // Expiration time
+    // Audiences (parsed but validated against config)
+    pub(crate) aud: Vec<String>,
+    // Expiration time
+    pub(crate) exp: i64,
+    // Kubernetes specific
     #[serde(rename = "kubernetes.io")]
-    pub(crate) kubernetes_io: Option<KubernetesIo>, // Kubernetes specific information
+    pub(crate) kubernetes_io: Option<KubernetesIo>,
 }
 
 #[derive(Debug, Deserialize)]
