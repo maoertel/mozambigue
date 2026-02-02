@@ -162,7 +162,6 @@ impl IdentityExtractor for KubernetesExtractor {
     type Identity = KubernetesIdentity;
 
     fn extract_identity(&self, claims: &Self::Claims) -> Result<Self::Identity> {
-        // Try kubernetes.io claim first
         if let Some(k8s) = &claims.kubernetes_io {
             return Ok(KubernetesIdentity {
                 service_account: k8s.serviceaccount.name.clone(),
@@ -170,7 +169,6 @@ impl IdentityExtractor for KubernetesExtractor {
             });
         }
 
-        // Fallback: parse from sub field
         extract_identity_from_sub(&claims.sub)
     }
 }
@@ -183,20 +181,6 @@ impl KubernetesJwtVerifier {
     ///
     /// This is a convenience constructor for verifying Kubernetes service account tokens.
     /// It automatically uses the `KubernetesExtractor` for identity extraction.
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// use mozambigue::providers::kubernetes::KubernetesJwtVerifier;
-    ///
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let verifier = KubernetesJwtVerifier::with_issuer(
-    ///     "https://kubernetes.default.svc.cluster.local",
-    ///     "my-service"
-    /// ).await?;
-    /// # Ok(())
-    /// # }
-    /// ```
     pub async fn with_issuer(
         expected_issuer: impl Into<String>,
         audience: impl Into<String>,
