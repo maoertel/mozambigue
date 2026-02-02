@@ -16,25 +16,31 @@
 //! ## Example
 //!
 //! ```rust,no_run
-//! use mozambigue::{JwtVerifier, JwtVerifierConfig, VerifyJwt};
+//! use mozambigue::{JwtVerifier, JwtVerifierConfig, KubernetesExtractor, VerifyJwt};
 //! use std::time::Duration;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     // Create a verifier with custom configuration
+//!     // Simple usage with convenience method
+//!     let verifier = JwtVerifier::with_issuer(
+//!         "https://kubernetes.default.svc.cluster.local",
+//!         "my-service"
+//!     ).await?;
+//!
+//!     // Or create with custom configuration
 //!     let config = JwtVerifierConfig::new(
 //!         "https://kubernetes.default.svc.cluster.local",
 //!         "my-service"
 //!     ).with_cache_ttl(Duration::from_secs(1800)); // 30 minutes
 //!
-//!     let verifier = JwtVerifier::new(config).await?;
+//!     let verifier = JwtVerifier::new(config, KubernetesExtractor).await?;
 //!
 //!     // Verify a token
 //!     let token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...";
-//!     let subject = verifier.verify(token).await?;
+//!     let identity = verifier.verify(token).await?;
 //!
-//!     println!("Service Account: {}", subject.service_account);
-//!     println!("Namespace: {}", subject.namespace);
+//!     println!("Service Account: {}", identity.service_account);
+//!     println!("Namespace: {}", identity.namespace);
 //!
 //!     Ok(())
 //! }
@@ -43,13 +49,25 @@
 mod claims;
 mod config;
 mod error;
+mod extractor;
 mod jwks_cache;
 mod verifier;
 
 // Re-exports for public API
-pub use claims::Subject;
+pub use claims::KubernetesClaims;
+pub use claims::KubernetesIdentity;
+pub use claims::StandardClaims;
 pub use config::JwtVerifierConfig;
 pub use error::Error;
 pub use error::Result;
+pub use extractor::IdentityExtractor;
+pub use extractor::KubernetesExtractor;
 pub use verifier::JwtVerifier;
 pub use verifier::VerifyJwt;
+
+// Type alias for Kubernetes JWT verification (backwards compatibility)
+/// A JWT verifier configured for Kubernetes service account tokens
+///
+/// This is a convenience type alias for `JwtVerifier<KubernetesExtractor>`.
+/// Use this when verifying Kubernetes service account tokens.
+pub type KubernetesJwtVerifier = JwtVerifier<KubernetesExtractor>;

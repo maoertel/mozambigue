@@ -10,86 +10,106 @@ use jsonwebtoken::Header;
 use jsonwebtoken::TokenData;
 use jsonwebtoken::Validation;
 
-use crate::claims::get_subject_from_claims;
-use crate::claims::Claims;
-use crate::claims::Subject;
+use crate::claims::StandardClaims;
 use crate::config::JwtVerifierConfig;
 use crate::error::Error;
 use crate::error::Result;
+use crate::extractor::IdentityExtractor;
+use crate::extractor::KubernetesExtractor;
 use crate::jwks_cache::JwksCache;
 
 /// Trait for JWT verification
+///
+/// Generic over the identity extractor type, allowing different identity extraction strategies.
 #[async_trait]
 pub trait VerifyJwt {
-    /// Verify a JWT token and extract the subject information
-    async fn verify(&self, token: &str) -> Result<Subject>;
+    /// The type of identity information extracted from the JWT
+    type Identity;
+
+    /// Verify a JWT token and extract the identity information
+    async fn verify(&self, token: &str) -> Result<Self::Identity>;
 }
 
 /// JWT verifier with JWKS caching support
-pub struct JwtVerifier {
+///
+/// Generic over an `IdentityExtractor` type that defines how to extract identity
+/// information from validated JWT claims.
+pub struct JwtVerifier<E: IdentityExtractor> {
     jwks_cache: JwksCache,
     expected_issuer: String,
     expected_audiences: Vec<String>,
+    extractor: E,
 }
 
-impl JwtVerifier {
-    /// Create a new JWT verifier with the given configuration
-    pub async fn new(config: JwtVerifierConfig) -> Result<Self> {
+impl<E: IdentityExtractor> JwtVerifier<E> {
+    /// Create a new JWT verifier with the given configuration and identity extractor
+    pub async fn new(config: JwtVerifierConfig, extractor: E) -> Result<Self> {
         let client = config.http_client.unwrap_or_default();
 
         Ok(Self {
             jwks_cache: JwksCache::new(config.jwks_cache_ttl, client),
             expected_issuer: config.expected_issuer,
             expected_audiences: config.expected_audiences,
+            extractor,
         })
     }
 
-    /// Create a new JWT verifier with simple configuration
-    pub async fn with_issuer(
-        expected_issuer: impl Into<String>,
-        audience: impl Into<String>,
-    ) -> Result<Self> {
-        let config = JwtVerifierConfig::new(expected_issuer, audience);
-        Self::new(config).await
-    }
-
     /// Parse token data without signature validation to extract header and claims
-    fn parse_token_data(&self, token: &str) -> Result<TokenData<Claims>> {
+    ///
+    /// This uses the extractor's Claims type to parse the token structure.
+    fn parse_token_data(&self, token: &str) -> Result<TokenData<E::Claims>> {
         // Signature validation is disabled here as we only parse our token to get header, issuer and the audience
         // Full validation including signature verification happens in validate_jwt()
-        let token_data = dangerous::insecure_decode::<Claims>(token)?;
+        let token_data = dangerous::insecure_decode::<E::Claims>(token)?;
         Ok(token_data)
     }
 
     /// Validate the JWT token with full signature verification
     fn validate_jwt(
         &self,
-        token_data: TokenData<Claims>,
+        token_data: TokenData<E::Claims>,
         token: &str,
         jwks: &JwkSet,
-    ) -> Result<Subject> {
+    ) -> Result<E::Identity> {
         let (decoding_key, validation) =
             get_decoding_key_and_validation(token_data.header, &self.expected_audiences, jwks)?;
 
-        let token_data = decode::<Claims>(token, &decoding_key, &validation)?;
+        let token_data = decode::<E::Claims>(token, &decoding_key, &validation)?;
 
-        if token_data.claims.iss != self.expected_issuer {
-            return Err(Error::WrongIssuer(token_data.claims.iss));
+        if token_data.claims.iss() != self.expected_issuer {
+            return Err(Error::WrongIssuer(token_data.claims.iss().to_string()));
         }
 
-        if token_data.claims.exp < Utc::now().timestamp() {
-            return Err(Error::TokenExpired(token_data.claims.exp));
+        if token_data.claims.exp() < Utc::now().timestamp() {
+            return Err(Error::TokenExpired(token_data.claims.exp()));
         }
 
-        get_subject_from_claims(token_data.claims)
+        self.extractor.extract_identity(&token_data.claims)
+    }
+}
+
+// Convenience methods for Kubernetes JWT verification
+impl JwtVerifier<KubernetesExtractor> {
+    /// Create a new Kubernetes JWT verifier with simple configuration
+    ///
+    /// This is a convenience constructor for verifying Kubernetes service account tokens.
+    /// It automatically uses the `KubernetesExtractor` for identity extraction.
+    pub async fn with_issuer(
+        expected_issuer: impl Into<String>,
+        audience: impl Into<String>,
+    ) -> Result<Self> {
+        let config = JwtVerifierConfig::new(expected_issuer, audience);
+        Self::new(config, KubernetesExtractor).await
     }
 }
 
 #[async_trait]
-impl VerifyJwt for JwtVerifier {
-    async fn verify(&self, token: &str) -> Result<Subject> {
+impl<E: IdentityExtractor> VerifyJwt for JwtVerifier<E> {
+    type Identity = E::Identity;
+
+    async fn verify(&self, token: &str) -> Result<Self::Identity> {
         let token_data = self.parse_token_data(token)?;
-        let jwks = self.jwks_cache.get_jwks(&token_data.claims.iss).await?;
+        let jwks = self.jwks_cache.get_jwks(token_data.claims.iss()).await?;
 
         self.validate_jwt(token_data, token, &jwks)
     }

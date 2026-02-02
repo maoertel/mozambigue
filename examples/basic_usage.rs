@@ -1,5 +1,6 @@
 use mozambigue::JwtVerifier;
 use mozambigue::JwtVerifierConfig;
+use mozambigue::KubernetesExtractor;
 use mozambigue::VerifyJwt;
 use std::time::Duration;
 
@@ -16,10 +17,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Verify the token
     match verifier.verify(token).await {
-        Ok(subject) => {
+        Ok(identity) => {
             println!("✓ Token verified successfully!");
-            println!("  Service Account: {}", subject.service_account);
-            println!("  Namespace: {}", subject.namespace);
+            println!("  Service Account: {}", identity.service_account);
+            println!("  Namespace: {}", identity.namespace);
         }
         Err(e) => {
             eprintln!("✗ Token verification failed: {}", e);
@@ -33,13 +34,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = JwtVerifierConfig::new("https://your-issuer.example.com", "my-service")
         .with_cache_ttl(Duration::from_secs(1800)); // 30 minutes cache
 
-    let verifier = JwtVerifier::new(config).await?;
+    let verifier = JwtVerifier::new(config, KubernetesExtractor).await?;
 
     match verifier.verify(token).await {
-        Ok(subject) => {
+        Ok(identity) => {
             println!("✓ Token verified successfully!");
-            println!("  Service Account: {}", subject.service_account);
-            println!("  Namespace: {}", subject.namespace);
+            println!("  Service Account: {}", identity.service_account);
+            println!("  Namespace: {}", identity.namespace);
         }
         Err(e) => {
             eprintln!("✗ Token verification failed: {}", e);
@@ -61,13 +62,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .with_cache_ttl(Duration::from_secs(3600))
     .with_http_client(custom_client);
 
-    let verifier = JwtVerifier::new(config).await?;
+    let verifier = JwtVerifier::new(config, KubernetesExtractor).await?;
 
     match verifier.verify(token).await {
-        Ok(subject) => {
+        Ok(identity) => {
             println!("✓ Token verified successfully!");
-            println!("  Service Account: {}", subject.service_account);
-            println!("  Namespace: {}", subject.namespace);
+            println!("  Service Account: {}", identity.service_account);
+            println!("  Namespace: {}", identity.namespace);
         }
         Err(e) => {
             eprintln!("✗ Token verification failed: {}", e);
