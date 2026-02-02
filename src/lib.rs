@@ -53,21 +53,19 @@ mod extractor;
 mod jwks_cache;
 mod verifier;
 
-// Re-exports for public API
-pub use claims::KubernetesClaims;
-pub use claims::KubernetesIdentity;
+pub mod providers;
+
+// Re-exports
+// Generic infrastructure
 pub use claims::StandardClaims;
 pub use config::JwtVerifierConfig;
 pub use error::Error;
 pub use error::Result;
 pub use extractor::IdentityExtractor;
-pub use extractor::KubernetesExtractor;
 pub use verifier::JwtVerifier;
 pub use verifier::VerifyJwt;
-
-// Type alias for Kubernetes JWT verification (backwards compatibility)
-/// A JWT verifier configured for Kubernetes service account tokens
-///
-/// This is a convenience type alias for `JwtVerifier<KubernetesExtractor>`.
-/// Use this when verifying Kubernetes service account tokens.
-pub type KubernetesJwtVerifier = JwtVerifier<KubernetesExtractor>;
+// Kubernetes (most common use case)
+pub use providers::kubernetes::KubernetesClaims;
+pub use providers::kubernetes::KubernetesExtractor;
+pub use providers::kubernetes::KubernetesIdentity;
+pub use providers::kubernetes::KubernetesJwtVerifier;

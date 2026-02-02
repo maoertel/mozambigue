@@ -15,12 +15,9 @@ use crate::config::JwtVerifierConfig;
 use crate::error::Error;
 use crate::error::Result;
 use crate::extractor::IdentityExtractor;
-use crate::extractor::KubernetesExtractor;
 use crate::jwks_cache::JwksCache;
 
 /// Trait for JWT verification
-///
-/// Generic over the identity extractor type, allowing different identity extraction strategies.
 #[async_trait]
 pub trait VerifyJwt {
     /// The type of identity information extracted from the JWT
@@ -55,8 +52,6 @@ impl<E: IdentityExtractor> JwtVerifier<E> {
     }
 
     /// Parse token data without signature validation to extract header and claims
-    ///
-    /// This uses the extractor's Claims type to parse the token structure.
     fn parse_token_data(&self, token: &str) -> Result<TokenData<E::Claims>> {
         // Signature validation is disabled here as we only parse our token to get header, issuer and the audience
         // Full validation including signature verification happens in validate_jwt()
@@ -88,21 +83,6 @@ impl<E: IdentityExtractor> JwtVerifier<E> {
     }
 }
 
-// Convenience methods for Kubernetes JWT verification
-impl JwtVerifier<KubernetesExtractor> {
-    /// Create a new Kubernetes JWT verifier with simple configuration
-    ///
-    /// This is a convenience constructor for verifying Kubernetes service account tokens.
-    /// It automatically uses the `KubernetesExtractor` for identity extraction.
-    pub async fn with_issuer(
-        expected_issuer: impl Into<String>,
-        audience: impl Into<String>,
-    ) -> Result<Self> {
-        let config = JwtVerifierConfig::new(expected_issuer, audience);
-        Self::new(config, KubernetesExtractor).await
-    }
-}
-
 #[async_trait]
 impl<E: IdentityExtractor> VerifyJwt for JwtVerifier<E> {
     type Identity = E::Identity;
@@ -125,14 +105,12 @@ fn get_decoding_key_and_validation(
 
     let decoding_key = get_decoding_key_for_kid(&kid, jwks)?;
 
-    // Runtime safety check: ensure audiences are configured
     if expected_audiences.is_empty() {
         return Err(Error::NoAudiencesConfigured);
     }
 
     let mut validation = Validation::new(header.alg);
 
-    // Validate against expected audiences from configuration, not the token's own audiences
     validation.set_audience(expected_audiences);
 
     Ok((decoding_key, validation))
