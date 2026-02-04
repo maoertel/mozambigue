@@ -22,6 +22,8 @@ pub enum Error {
     AlgorithmNotSupported(String),
     #[error("ServiceAccount name not present in subject")]
     ServiceAccountNotPresentInSubject,
+    #[error("Invalid JWT claims: {0}")]
+    InvalidClaims(String),
     #[error("JWKS cache error: {0}")]
     JwksCacheError(String),
     #[error(
