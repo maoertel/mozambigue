@@ -17,6 +17,7 @@ A generic, extensible Rust library for JWT (JSON Web Token) validation with JWKS
 ### Currently Supported Providers
 
 - **Kubernetes** - Service account token validation with namespace and service account extraction
+- **Okta** - OAuth2/OIDC token validation (access tokens and ID tokens) with user identity, groups, and scopes
 
 ### Ready to Add
 
@@ -58,6 +59,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Service Account: {}", identity.service_account);
     println!("Namespace: {}", identity.namespace);
+
+    Ok(())
+}
+```
+
+### Okta OAuth2/OIDC Tokens
+
+```rust
+use mozambigue::{OktaJwtVerifier, VerifyJwt};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let verifier = OktaJwtVerifier::with_issuer(
+        "https://your-org.okta.com/oauth2/default",
+        "api://default"
+    ).await?;
+
+    let token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...";
+    let identity = verifier.verify(token).await?;
+
+    println!("Subject: {}", identity.subject);
+    if let Some(email) = &identity.email {
+        println!("Email: {email}");
+    }
+    if let Some(groups) = &identity.groups {
+        println!("Groups: {groups:?}");
+    }
 
     Ok(())
 }
@@ -144,11 +172,17 @@ mozambigue/
 │   └── VerifyJwt            - Verification trait
 │
 └── providers/
-    └── kubernetes/          - Kubernetes implementation
-        ├── KubernetesClaims
-        ├── KubernetesIdentity
-        ├── KubernetesExtractor
-        └── KubernetesJwtVerifier
+    ├── kubernetes/          - Kubernetes implementation
+    │   ├── KubernetesClaims
+    │   ├── KubernetesIdentity
+    │   ├── KubernetesExtractor
+    │   └── KubernetesJwtVerifier
+    │
+    └── okta/                - Okta implementation
+        ├── OktaClaims
+        ├── OktaIdentity
+        ├── OktaExtractor
+        └── OktaJwtVerifier
 ```
 
 ### How It Works
@@ -246,6 +280,7 @@ See the [examples](examples/) directory:
 
 ```bash
 cargo run --example basic_usage
+cargo run --example okta_usage
 ```
 
 ## License

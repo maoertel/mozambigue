@@ -3,12 +3,12 @@ name = "mozambigue"
 version = "0.1.1"
 edition = "2021"
 authors = ["Mathias Oertel <mathias.oertel@gmail.com>"]
-description = "JWT validation library with JWKS caching for Kubernetes service account tokens"
+description = "JWT validation library with JWKS caching for Kubernetes and Okta tokens"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/maoertel/mozambigue"
 documentation = "https://docs.rs/mozambigue"
 readme = "README.md"
-keywords = ["jwt", "jwks", "kubernetes", "authentication", "token"]
+keywords = ["jwt", "jwks", "kubernetes", "okta", "authentication"]
 categories = ["authentication", "cryptography"]
 
 [dependencies]
