@@ -2,8 +2,8 @@
 //!
 //! A Rust library for JWT (JSON Web Token) validation with JWKS (JSON Web Key Set) caching support.
 //!
-//! This library is designed for validating JWTs issued by Kubernetes or other OpenID Connect providers,
-//! with built-in support for Kubernetes service account token validation.
+//! This library is designed for validating JWTs issued by Kubernetes, Okta, or other OpenID Connect
+//! providers, with built-in support for Kubernetes service account tokens and Okta OAuth2/OIDC tokens.
 //!
 //! ## Features
 //!
@@ -12,17 +12,18 @@
 //! - Configurable JWKS caching with TTL (Time-To-Live)
 //! - Issuer, audience and expiration validation
 //! - Kubernetes-specific claims extraction (service account and namespace)
+//! - Okta OAuth2/OIDC token validation (access tokens and ID tokens)
 //!
 //! ## Example
 //!
 //! ```rust,no_run
-//! use mozambigue::{JwtVerifier, JwtVerifierConfig, KubernetesExtractor, VerifyJwt};
+//! use mozambigue::{KubernetesJwtVerifier, JwtVerifierConfig, KubernetesExtractor, JwtVerifier, VerifyJwt};
 //! use std::time::Duration;
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Simple usage with convenience method
-//!     let verifier = JwtVerifier::with_issuer(
+//!     let verifier = KubernetesJwtVerifier::with_issuer(
 //!         "https://kubernetes.default.svc.cluster.local",
 //!         "my-service"
 //!     ).await?;
@@ -64,8 +65,13 @@ pub use error::Result;
 pub use extractor::IdentityExtractor;
 pub use verifier::JwtVerifier;
 pub use verifier::VerifyJwt;
-// Kubernetes (most common use case)
+// Kubernetes
 pub use providers::kubernetes::KubernetesClaims;
 pub use providers::kubernetes::KubernetesExtractor;
 pub use providers::kubernetes::KubernetesIdentity;
 pub use providers::kubernetes::KubernetesJwtVerifier;
+// Okta
+pub use providers::okta::OktaClaims;
+pub use providers::okta::OktaExtractor;
+pub use providers::okta::OktaIdentity;
+pub use providers::okta::OktaJwtVerifier;

@@ -10,5 +10,7 @@
 //! ## Available Providers
 //!
 //! - [`kubernetes`]: Kubernetes service account tokens
+//! - [`okta`]: Okta OAuth2/OIDC tokens (access tokens and ID tokens)
 
 pub mod kubernetes;
+pub mod okta;

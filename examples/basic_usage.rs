@@ -1,6 +1,7 @@
 use mozambigue::JwtVerifier;
 use mozambigue::JwtVerifierConfig;
 use mozambigue::KubernetesExtractor;
+use mozambigue::KubernetesJwtVerifier;
 use mozambigue::VerifyJwt;
 use std::time::Duration;
 
@@ -8,9 +9,11 @@ use std::time::Duration;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Example 1: Simple usage with default settings
     println!("=== Example 1: Simple Usage ===");
-    let verifier =
-        JwtVerifier::with_issuer("https://kubernetes.default.svc.cluster.local", "my-service")
-            .await?;
+    let verifier = KubernetesJwtVerifier::with_issuer(
+        "https://kubernetes.default.svc.cluster.local",
+        "my-service",
+    )
+    .await?;
 
     // Example JWT token (this is just a placeholder - use a real token in practice)
     let token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...";
